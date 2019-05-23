@@ -25,12 +25,12 @@ whales <- read_csv("HW3Data.csv")
 
 ```
 
+
+#Question 1
+Create a linear probability model that predicts a respondent’s probability of voting ‘yes’ on the ballot based on their age, income, NEP score, the risk reduction offered by the program, and the cost of the program to that respondent. Show the model and interpret the regression coefficients
+
 ```{r Question 1}
-##############################################################
-# Question 1
-##############################################################
-# Create a linear probability model that predicts a respondent’s probability of voting ‘yes’ on the ballot based on their age, income, NEP score, the risk reduction offered by the program, and the cost of the program to that respondent. Show the model and interpret the regression coefficients
-##############################################################
+
 
 #Data exploring
 whale_plot <- ggplot(whales, aes(x = NEP, y = vote)) +
@@ -67,13 +67,10 @@ summary(prob_lm)
 ```
 
 
+#Question 2
+Based on this regression, what can you say about the value of a single prevented whale death? (Hint: Think about how risk reduction for all whales translates into the number of whale deaths avoided)
 
 ```{r Question 2}
-##############################################################
-# Question 2
-##############################################################
-# Based on this regression, what can you say about the value of a single prevented whale death? (Hint: Think about how risk reduction for all whales translates into the number of whale deaths avoided)
-##############################################################
 
 #20% reduction --> 5 less whale deaths
 #4% reduction --> 1 less whale death
@@ -110,36 +107,29 @@ value1 <- 57.45237 - 54.66893
 
 
 
-
 Question 3: 
 
 Pick three arbitrary respondents. For each of those respondents, estimate their WTP for a VSR
 program offering 60% risk reduction.
 
 ```{r}
-# Linear regression for WTP
-wtp_lm <- lm(bid ~ age+income+NEP+risk+vote, data = whales)
-summary(wtp_lm)
-# wtp = 69.46411 - 0.04160*NEP - 0.040145*risk - 5.02885*vote - 1.04449*middle - 0.54404*rich - 2.19112*veryrich - 2.35561*onepercent - 3.45011*toforty - 2.55066*tofifty - 6.60334*tosixty - 1.83242*oversixty
-
-wtpfxn <- function(NEP, risk, vote, middle, rich, veryrich, onepercent, toforty, tofifty, tosixty, oversixty) {69.46411 - 0.04160*NEP - 0.040145*risk - 5.02885*vote - 1.04449*middle - 0.54404*rich - 2.19112*veryrich - 2.35561*onepercent - 3.45011*toforty - 2.55066*tofifty - 6.60334*tosixty - 1.83242*oversixty}
-
 
 #(48, very_rich, toforty)
-wtpfxn(NEP = 48, risk = 60, middle = 0, rich = 0, veryrich = 1, onepercent = 0, toforty = 1, tofifty = 0, tosixty = 0, oversixty = 0, vote = 0.7) 
-# 55.89719
+bidfxn(NEP = 48, risk = 60, middle = 0, rich = 0, veryrich = 1, onepercent = 0, toforty = 1, tofifty = 0, tosixty = 0, oversixty = 0, vote = mean_vote) 
+# $222.9255
 
-#(45,one_percent, tosixty)
-wtpfxn(NEP = 45, risk = 60, middle = 0, rich = 0, veryrich = 0, onepercent = 1, toforty = 0, tofifty = 0, tosixty = 1, oversixty = 0, vote = 0.7) 
-# 52.70427
+#(45, one_percent, tosixty)
+bidfxn(NEP = 45, risk = 60, middle = 0, rich = 0, veryrich = 0, onepercent = 1, toforty = 0, tofifty = 0, tosixty = 1, oversixty = 0, vote = mean_vote) 
+# $146.598
 
-#(22, poor, tothirty)
-wtpfxn(NEP = 22, risk = 60, middle = 0, rich = 0, veryrich = 0, onepercent = 0, toforty = 0, tofifty = 0, tosixty = 0, oversixty = 0, vote = 0.7) 
-# 62.62002
+#(32, middle, tothirty)
+bidfxn(NEP = 32, risk = 60, middle = 1, rich = 0, veryrich = 0, onepercent = 0, toforty = 0, tofifty = 0, tosixty = 0, oversixty = 0, vote = mean_vote) 
+# $ -20.13964
 
 ```
-Question 4.
 
+
+#Question 4.
 Repeat this process and estimate the mean WTP for a VSR program offering 60% risk
 reduction among Santa Barbara County households.
 
@@ -147,8 +137,9 @@ reduction among Santa Barbara County households.
 
 #Use average values of dataset to find mean WTP
 
-mean_wtp <- wtpfxn(NEP = mean_NEP, risk = 60, middle = 0, rich = 0, veryrich = 0, onepercent = 1, toforty = 0, tofifty = 0, tosixty = 0, oversixty = 0, vote = mean_vote) 
-# Mean WTP = 59.51318
+mean_wtp <- bidfxn(NEP = mean_NEP, risk = 60, middle = 0, rich = 0, veryrich = 0, onepercent = 1, toforty = 0, tofifty = 0, tosixty = 0, oversixty = 0, vote = mean_vote) 
+mean_wtp
+# Mean WTP = $82.50331
 ```
 
 Question 5-6.
@@ -156,10 +147,12 @@ If there are 150,000 households in Santa Barbara County, estimate the total bene
 program to these households. Based only on these benefits, do the benefits of the VSR program outweigh the costs?
 ```{r}
 mean_wtp*150000
-total_benefit <- 8926976
+total_benefit <- 12375496
 total_costs <- 7000000
-net_total <- total_benefit - total_costs
-net_total # 1,926,976
+NSB_vsr <- total_benefit - total_costs
+NSB_vsr
+
+#NSB = $5,375,496
 #Benefits > costs
 ```
 
@@ -187,20 +180,13 @@ would be the social value of allowing ships to enter the carbon trading market?
 # 20% risk reduction -> 5 whales saved
 # 60% risk reduction-> 15 whales saved
 
+NSB_trade <- total_benefit 
+NSB_trade 
 
+# NSB = $12,375,496
 ```
 
 #Social value
-Costs/benefits of voluntary program:
-Costs = $7 million to implement 
-Benefits = $8,926,976
-
-Costs/benefits of cap and trade program:
-Costs = $1000 per
-Benefits = $8,926,976
-
-
-?????????????????????
-
-
+NSB for the vessel reduction program = $5,375,496
+NSB for the vessel reduction program plus carbon trading = $12,375,496
 
