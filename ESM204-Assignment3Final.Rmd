@@ -1,0 +1,211 @@
+---
+title: "ESM204-Assignment3"
+author: "Geoffrey Cook"
+date: "5/16/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Reading in Libraries and Databases}
+##############################################################
+# Reading in libraries and databases
+##############################################################
+
+# Libraries
+library(tidyverse)
+library(RColorBrewer)
+library(stargazer)
+library(vcdExtra)
+
+# Data
+whales <- read_csv("HW3Data.csv")
+
+```
+
+```{r Question 1}
+##############################################################
+# Question 1
+##############################################################
+# Create a linear probability model that predicts a respondent’s probability of voting ‘yes’ on the ballot based on their age, income, NEP score, the risk reduction offered by the program, and the cost of the program to that respondent. Show the model and interpret the regression coefficients
+##############################################################
+
+#Data exploring
+whale_plot <- ggplot(whales, aes(x = NEP, y = vote)) +
+  geom_point(aes(color = income))
+whale_plot
+
+facet_wrap(~Discipline)
+
+salary_service
+
+
+
+#Check classs of categorical variables
+class(whales$age) 
+class(whales$income) 
+class(whales$income) 
+
+#Change class to "factor"
+whales$age <- factor(whales$age)
+whales$income <- factor(whales$income)
+
+#Change reference levels
+whales$age <- fct_relevel(whales$age, "tothirty", "toforty", "tofifty", "tosixty", "oversixty")
+whales$income <- fct_relevel(whales$income, "poor", "middle", "rich", "very_rich", "one_percent")
+
+#Check reference levels
+levels(whales$age)
+levels(whales$income)
+
+
+# Linear regression for probability of voting 'YES'
+prob_lm <- lm(vote ~ age+income+NEP+risk+bid, data = whales)
+summary(prob_lm)
+
+#Model results:
+#P(yes) =  0.1428764 + 0.0158639*NEP + 0.0007445*risk - 0.0010699*bid - 0.0027386*middle + 0.0047505*rich + 0.0440535*veryrich + 0.0060895*onepercent - 0.0405591*toforty - 0.0104585*tofifty - 0.0366662*tosixty - 0.0204401*oversixty
+
+
+```
+
+
+
+```{r Question 2}
+##############################################################
+# Question 2
+##############################################################
+# Based on this regression, what can you say about the value of a single prevented whale death? (Hint: Think about how risk reduction for all whales translates into the number of whale deaths avoided)
+##############################################################
+
+#20% reduction --> 5 less whale deaths
+#4% reduction --> 1 less whale death
+
+#Q: How does bid change if the risk reduction is 4%?
+
+#Bid function
+
+#vote =  0.1428764 + 0.0158639*NEP + 0.0007445*risk - 0.0010699*bid - 0.0027386*middle + 0.0047505*rich + 0.0440535*veryrich + 0.0060895*onepercent - 0.0405591*toforty - 0.0104585*tofifty - 0.0366662*tosixty - 0.0204401*oversixty
+
+# 0.0010699*bid = 0.1428764 + 0.0158639*NEP + 0.0007445*risk - 0.0027386*middle + 0.0047505*rich + 0.0440535*veryrich + 0.0060895*onepercent - 0.0405591*toforty - 0.0104585*tofifty - 0.0366662*tosixty - 0.0204401*oversixty - vote
+
+
+bidfxn <- function(NEP, risk, middle, rich, veryrich, onepercent, toforty, tofifty, tosixty, oversixty, vote) {(0.1428764 + 0.0158639*NEP + 0.0007445*risk - 0.0027386*middle + 0.0047505*rich + 0.0440535*veryrich + 0.0060895*onepercent - 0.0405591*toforty - 0.0104585*tofifty - 0.0366662*tosixty - 0.0204401*oversixty - vote) / 0.0010699}
+
+#Averages
+mean_risk <- mean(whales$risk) #49
+mean_NEP <- mean(whales$NEP) #38.366
+mean_vote <- mean(whales$vote) #0.714
+summary(whales$age) #Mode is tothirty
+summary(whales$income) #Mode is one_percent
+
+#If the level of risk reduction is 20%, what would the bid be?
+bidfxn(NEP = 38.366, risk = 20, middle = 0, rich = 0, veryrich = 0, onepercent = 1, toforty = 0, tofifty = 0, tosixty = 0, oversixty = 0, vote = 0.714) # 54.66893
+
+#If the level of risk reduction is 24%, what would the bid be?
+bidfxn(NEP = 38.366, risk = 24, middle = 0, rich = 0, veryrich = 0, onepercent = 1, toforty = 0, tofifty = 0, tosixty = 0, oversixty = 0, vote = 0.714) # 57.45237
+
+#So then what is the value of 1 whale? 
+value1 <- 57.45237 - 54.66893
+# $2.78344
+
+```
+
+
+
+
+Question 3: 
+
+Pick three arbitrary respondents. For each of those respondents, estimate their WTP for a VSR
+program offering 60% risk reduction.
+
+```{r}
+# Linear regression for WTP
+wtp_lm <- lm(bid ~ age+income+NEP+risk+vote, data = whales)
+summary(wtp_lm)
+# wtp = 69.46411 - 0.04160*NEP - 0.040145*risk - 5.02885*vote - 1.04449*middle - 0.54404*rich - 2.19112*veryrich - 2.35561*onepercent - 3.45011*toforty - 2.55066*tofifty - 6.60334*tosixty - 1.83242*oversixty
+
+wtpfxn <- function(NEP, risk, vote, middle, rich, veryrich, onepercent, toforty, tofifty, tosixty, oversixty) {69.46411 - 0.04160*NEP - 0.040145*risk - 5.02885*vote - 1.04449*middle - 0.54404*rich - 2.19112*veryrich - 2.35561*onepercent - 3.45011*toforty - 2.55066*tofifty - 6.60334*tosixty - 1.83242*oversixty}
+
+
+#(48, very_rich, toforty)
+wtpfxn(NEP = 48, risk = 60, middle = 0, rich = 0, veryrich = 1, onepercent = 0, toforty = 1, tofifty = 0, tosixty = 0, oversixty = 0, vote = 0.7) 
+# 55.89719
+
+#(45,one_percent, tosixty)
+wtpfxn(NEP = 45, risk = 60, middle = 0, rich = 0, veryrich = 0, onepercent = 1, toforty = 0, tofifty = 0, tosixty = 1, oversixty = 0, vote = 0.7) 
+# 52.70427
+
+#(22, poor, tothirty)
+wtpfxn(NEP = 22, risk = 60, middle = 0, rich = 0, veryrich = 0, onepercent = 0, toforty = 0, tofifty = 0, tosixty = 0, oversixty = 0, vote = 0.7) 
+# 62.62002
+
+```
+Question 4.
+
+Repeat this process and estimate the mean WTP for a VSR program offering 60% risk
+reduction among Santa Barbara County households.
+
+```{r}
+
+#Use average values of dataset to find mean WTP
+
+mean_wtp <- wtpfxn(NEP = mean_NEP, risk = 60, middle = 0, rich = 0, veryrich = 0, onepercent = 1, toforty = 0, tofifty = 0, tosixty = 0, oversixty = 0, vote = mean_vote) 
+# Mean WTP = 59.51318
+```
+
+Question 5-6.
+If there are 150,000 households in Santa Barbara County, estimate the total benefit of a VSR
+program to these households. Based only on these benefits, do the benefits of the VSR program outweigh the costs?
+```{r}
+mean_wtp*150000
+total_benefit <- 8926976
+total_costs <- 7000000
+net_total <- total_benefit - total_costs
+net_total # 1,926,976
+#Benefits > costs
+```
+
+Question 7.
+Suppose the price of a carbon credit is $Z per ton, at what price Z* will the shipping industry
+decide to adopt the VSR for purely self-interested reasons? (Note: if ships voluntarily reduce
+speed, then the $7 million cost (noted above) of implementing the VSR would be avoided)
+
+```{r}
+#Ships will voluntarily adopt the policy of the cost of speed reduction < costs of carbon credit
+
+1000 < 20 * Z
+Z > 50
+
+#Z must be at least $50 per ton of carbon
+```
+
+
+Question 8
+Now suppose the carbon credit price is exactly Z*, so all ships voluntarily reduce speed to
+achieve the 60% risk reduction. Approximately how many whales would be saved by this? What
+would be the social value of allowing ships to enter the carbon trading market?
+
+```{r}
+# 20% risk reduction -> 5 whales saved
+# 60% risk reduction-> 15 whales saved
+
+
+```
+
+#Social value
+Costs/benefits of voluntary program:
+Costs = $7 million to implement 
+Benefits = $8,926,976
+
+Costs/benefits of cap and trade program:
+Costs = $1000 per
+Benefits = $8,926,976
+
+
+?????????????????????
+
+
+
