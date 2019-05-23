@@ -37,11 +37,6 @@ whale_plot <- ggplot(whales, aes(x = NEP, y = vote)) +
   geom_point(aes(color = income))
 whale_plot
 
-facet_wrap(~Discipline)
-
-salary_service
-
-
 
 #Check classs of categorical variables
 class(whales$age) 
